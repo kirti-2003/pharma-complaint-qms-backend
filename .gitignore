@@ -1,0 +1,29 @@
+# Environment variables
+.env
+
+# Virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test cache
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Uploaded complaint files
+uploads/complaints/*
+!uploads/complaints/.gitkeep
+
+# Logs
+*.log
+
+# Alembic cache
+alembic/__pycache__/
+alembic/versions/__pycache__/
