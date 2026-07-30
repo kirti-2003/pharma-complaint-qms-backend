@@ -13,7 +13,7 @@ from app.repositories.audit_repository import AuditRepository
 from app.repositories.complaint_repository import ComplaintRepository
 from app.repositories.message_repository import MessageRepository
 from app.schemas.attachment import AttachmentCreate
-
+from app.utils.file_parser import extract_text_from_file
 
 class AttachmentService:
     """
@@ -651,3 +651,119 @@ class AttachmentService:
                 os.remove(file_path)
         except OSError:
             pass
+
+
+    def extract_attachment_text(
+        self,
+        db: Session,
+        attachment_id: UUID,
+    ) -> ComplaintAttachment:
+        """
+        Extract readable text from an uploaded attachment.
+
+        The extracted text is stored on the attachment and copied to the
+        complaint so that the AI workflow can process it.
+        """
+
+        attachment = self.get_attachment_by_id(
+            db=db,
+            attachment_id=attachment_id,
+        )
+
+        complaint = self.complaint_repository.get_complaint_by_id(
+            db=db,
+            complaint_id=attachment.complaint_id,
+        )
+
+        if complaint is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Complaint not found.",
+            )
+
+        try:
+            attachment.extraction_status = "PROCESSING"
+            attachment.extraction_error = None
+
+            db.flush()
+
+            extracted_text = extract_text_from_file(
+                storage_path=attachment.storage_path,
+                file_extension=attachment.file_extension,
+            )
+
+            attachment.extracted_text = extracted_text
+            attachment.extraction_status = "COMPLETED"
+            attachment.extraction_error = None
+
+            complaint.raw_complaint_text = extracted_text
+
+            if attachment.file_extension.lower() == ".pdf":
+                complaint.input_type = "PDF"
+            else:
+                complaint.input_type = "DOCUMENT"
+
+            self.audit_repository.create_system_audit_log(
+                db=db,
+                complaint_id=complaint.complaint_id,
+                action="ATTACHMENT_EXTRACTION_COMPLETED",
+                description="Text was extracted from the uploaded attachment.",
+                audit_metadata={
+                    "attachment_id": str(attachment.attachment_id),
+                    "original_file_name": attachment.original_file_name,
+                    "file_extension": attachment.file_extension,
+                    "extracted_character_count": len(extracted_text),
+                },
+            )
+
+            db.commit()
+            db.refresh(attachment)
+
+            return attachment
+
+        except HTTPException as exc:
+            db.rollback()
+
+            try:
+                attachment = self.get_attachment_by_id(
+                    db=db,
+                    attachment_id=attachment_id,
+                )
+
+                attachment.extraction_status = "FAILED"
+                attachment.extraction_error = str(exc.detail)
+
+                db.commit()
+            except SQLAlchemyError:
+                db.rollback()
+
+            raise
+
+        except SQLAlchemyError as exc:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to save extracted attachment text.",
+            ) from exc
+
+        except Exception as exc:
+            db.rollback()
+
+            try:
+                attachment = self.get_attachment_by_id(
+                    db=db,
+                    attachment_id=attachment_id,
+                )
+
+                attachment.extraction_status = "FAILED"
+                attachment.extraction_error = str(exc)
+
+                db.commit()
+            except SQLAlchemyError:
+                db.rollback()
+
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Failed to extract text from the uploaded document.",
+            ) from exc

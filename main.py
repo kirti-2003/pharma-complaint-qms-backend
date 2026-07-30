@@ -8,8 +8,12 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import dispose_engine, engine
 from app.core.logging import configure_logging, get_logger
-from app.routes import health_routes
-
+from app.routes import (
+    ai_routes,
+    complaint_routes,
+    attachment_routes,
+    health_routes,
+)
 
 configure_logging()
 logger = get_logger(__name__)
@@ -64,6 +68,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         settings.frontend_url,
+        "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
@@ -72,11 +77,10 @@ app.add_middleware(
 )
 
 
-app.include_router(
-    health_routes.router,
-    prefix="/api",
-    tags=["Health"],
-)
+app.include_router( health_routes.router, prefix="/api", tags=["Health"],)
+app.include_router(ai_routes.router, prefix="/api",)
+app.include_router( complaint_routes.router, prefix="/api",)
+app.include_router( attachment_routes.router, prefix="/api",)
 
 
 @app.get("/")
