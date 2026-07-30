@@ -456,7 +456,7 @@ def update_from_chat_node(
                 ),
                 user_prompt=user_prompt,
                 temperature=0.0,
-                max_tokens=1200,
+                max_tokens=600,
             )
         )
 

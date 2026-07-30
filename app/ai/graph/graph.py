@@ -12,14 +12,12 @@ from app.ai.graph.router import (
 from app.ai.graph.state import (
     ComplaintGraphState,
 )
-from app.ai.nodes.assess_risk import (
-    assess_risk_node,
+
+from app.ai.nodes.assess_complaint import (
+    assess_complaint_node,
 )
 from app.ai.nodes.build_final_output import (
     build_final_output_node,
-)
-from app.ai.nodes.classify_complaint import (
-    classify_complaint_node,
 )
 from app.ai.nodes.extract_complaint import (
     extract_complaint_node,
@@ -36,6 +34,10 @@ def create_complaint_graph():
     """
     Build and compile the pharmaceutical complaint
     processing LangGraph.
+
+    Optimized workflow:
+    - One Groq call for extraction
+    - One Groq call for classification and risk assessment
     """
 
     workflow = StateGraph(
@@ -62,13 +64,8 @@ def create_complaint_graph():
     )
 
     workflow.add_node(
-        "classify_complaint",
-        classify_complaint_node,
-    )
-
-    workflow.add_node(
-        "assess_risk",
-        assess_risk_node,
+        "assess_complaint",
+        assess_complaint_node,
     )
 
     workflow.add_node(
@@ -129,34 +126,19 @@ def create_complaint_graph():
         "validate_fields",
         validation_router,
         {
-            "classify_complaint":
-                "classify_complaint",
+            "assess_complaint":
+                "assess_complaint",
             "build_final_output":
                 "build_final_output",
         },
     )
 
     # --------------------------------------------------
-    # Classification routing
+    # Combined classification and risk routing
     # --------------------------------------------------
 
     workflow.add_conditional_edges(
-        "classify_complaint",
-        processing_router,
-        {
-            "continue":
-                "assess_risk",
-            "build_final_output":
-                "build_final_output",
-        },
-    )
-
-    # --------------------------------------------------
-    # Risk routing
-    # --------------------------------------------------
-
-    workflow.add_conditional_edges(
-        "assess_risk",
+        "assess_complaint",
         processing_router,
         {
             "continue":
@@ -165,6 +147,10 @@ def create_complaint_graph():
                 "build_final_output",
         },
     )
+
+    # --------------------------------------------------
+    # Final output
+    # --------------------------------------------------
 
     workflow.add_edge(
         "build_final_output",
@@ -174,6 +160,4 @@ def create_complaint_graph():
     return workflow.compile()
 
 
-complaint_graph = (
-    create_complaint_graph()
-)
+complaint_graph = create_complaint_graph()

@@ -88,7 +88,7 @@ def extract_complaint_node(
             system_prompt=EXTRACTION_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.1,
-            max_tokens=2000,
+            max_tokens=900,
         )
 
         parsed_json = _parse_json_response(

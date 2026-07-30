@@ -32,7 +32,7 @@ class GroqClient:
         user_prompt: str,
         model: str | None = None,
         temperature: float = 0.1,
-        max_tokens: int = 2000,
+        max_tokens: int = 800,
     ) -> dict[str, Any]:
         """
         Send a chat-completion request to Groq.

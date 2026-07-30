@@ -12,7 +12,12 @@ from app.ai.prompts.classification_prompt import (
 from app.ai.schemas.structured_outputs import (
     ComplaintClassificationOutput,
 )
-
+from app.ai.utils.prompt_payload import (
+    compact_dictionary,
+)
+from app.ai.utils.prompt_payload import (
+    build_classification_payload,
+)
 
 def _parse_json_response(
     content: str,
@@ -419,10 +424,16 @@ def classify_complaint_node(
         }
 
     try:
+        classification_payload = (
+            build_classification_payload(
+                extracted_fields
+            )
+        )
+
         complaint_json = json.dumps(
-            extracted_fields,
-            indent=2,
+            classification_payload,
             ensure_ascii=False,
+            separators=(",", ":"),
             default=str,
         )
 
@@ -438,7 +449,7 @@ def classify_complaint_node(
             ),
             user_prompt=user_prompt,
             temperature=0.1,
-            max_tokens=1200,
+            max_tokens=900,
         )
 
         response_content = result.get(

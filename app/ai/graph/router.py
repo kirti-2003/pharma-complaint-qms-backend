@@ -16,7 +16,7 @@ ProcessingRoute = Literal[
 ]
 
 ValidationRoute = Literal[
-    "classify_complaint",
+    "assess_complaint",
     "build_final_output",
 ]
 
@@ -75,4 +75,4 @@ def validation_router(
     ):
         return "build_final_output"
 
-    return "classify_complaint"
+    return "assess_complaint"

@@ -1,6 +1,77 @@
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+)
 
+def normalize_confidence(
+    value: Any,
+) -> float | None:
+    """
+    Convert numeric or categorical confidence values
+    into a float between 0.0 and 1.0.
+    """
+
+    if value is None:
+        return None
+
+    if isinstance(value, bool):
+        return None
+
+    if isinstance(value, (int, float)):
+        numeric_value = float(value)
+
+        if numeric_value > 1:
+            numeric_value = numeric_value / 100
+
+        return max(
+            0.0,
+            min(1.0, numeric_value),
+        )
+
+    if isinstance(value, str):
+        cleaned_value = value.strip().upper()
+
+        confidence_mapping = {
+            "VERY LOW": 0.2,
+            "LOW": 0.35,
+            "MEDIUM": 0.6,
+            "MODERATE": 0.6,
+            "HIGH": 0.85,
+            "VERY HIGH": 0.95,
+        }
+
+        if cleaned_value in confidence_mapping:
+            return confidence_mapping[
+                cleaned_value
+            ]
+
+        cleaned_value = cleaned_value.replace(
+            "%",
+            "",
+        )
+
+        try:
+            numeric_value = float(
+                cleaned_value
+            )
+
+            if numeric_value > 1:
+                numeric_value = (
+                    numeric_value / 100
+                )
+
+            return max(
+                0.0,
+                min(1.0, numeric_value),
+            )
+
+        except ValueError:
+            return None
+
+    return None
 
 class ExtractedComplaintOutput(BaseModel):
     """
@@ -199,8 +270,8 @@ class ComplaintClassificationOutput(BaseModel):
 
     classification_confidence: float | None = Field(
         default=None,
-        ge=0,
-        le=1,
+        ge=0.0,
+        le=1.0,
         description="Confidence score between 0 and 1.",
     )
 
@@ -208,6 +279,18 @@ class ComplaintClassificationOutput(BaseModel):
         default=None,
         description="Brief explanation supporting the classification.",
     )
+    @field_validator(
+        "classification_confidence",
+        mode="before",
+    )
+    @classmethod
+    def validate_classification_confidence(
+        cls,
+        value: Any,
+    ) -> float | None:
+        return normalize_confidence(
+            value
+        )
 
 
 class RiskAssessmentOutput(BaseModel):
@@ -290,8 +373,8 @@ class RiskAssessmentOutput(BaseModel):
 
     risk_confidence: float | None = Field(
         default=None,
-        ge=0,
-        le=1,
+        ge=0.0,
+        le=1.0,
         description="Confidence score between 0 and 1.",
     )
 
@@ -299,6 +382,62 @@ class RiskAssessmentOutput(BaseModel):
         default=None,
         description="Brief explanation supporting the risk assessment.",
     )
+
+    @field_validator(
+        "risk_level",
+        mode="before",
+    )
+    @classmethod
+    def validate_risk_level(
+        cls,
+        value: Any,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        if isinstance(value, str):
+            cleaned = value.strip().upper()
+
+            if cleaned in {
+                "LOW",
+                "MEDIUM",
+                "HIGH",
+                "CRITICAL",
+            }:
+                return cleaned
+
+            try:
+                numeric_value = float(cleaned)
+                value = numeric_value
+            except ValueError:
+                return None
+
+        if isinstance(value, (int, float)):
+            numeric_value = float(value)
+
+            if numeric_value <= 0.25:
+                return "LOW"
+
+            if numeric_value <= 0.5:
+                return "MEDIUM"
+
+            if numeric_value <= 0.75:
+                return "HIGH"
+
+            return "CRITICAL"
+
+        return None
+
+    @field_validator(
+        "risk_confidence",
+        mode="before",
+    )
+    @classmethod
+    def validate_risk_confidence(
+        cls,
+        value: Any,
+    ) -> float | None:
+        return normalize_confidence(value)
 
 
 class ChatCorrectionOutput(BaseModel):
@@ -461,3 +600,13 @@ class ComplaintFinalOutput(BaseModel):
         default=None,
         description="Workflow error message when processing fails.",
     )
+
+
+class ComplaintAssessmentOutput(BaseModel):
+        model_config = ConfigDict(
+            extra="ignore",
+            str_strip_whitespace=True,
+        )
+
+        classification: ComplaintClassificationOutput
+        risk_assessment: RiskAssessmentOutput

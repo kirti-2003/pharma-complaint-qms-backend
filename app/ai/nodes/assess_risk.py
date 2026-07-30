@@ -12,7 +12,9 @@ from app.ai.prompts.risk_prompt import (
 from app.ai.schemas.structured_outputs import (
     RiskAssessmentOutput,
 )
-
+from app.ai.utils.prompt_payload import (
+    build_risk_payload,
+)
 
 def _parse_json_response(
     content: str,
@@ -113,15 +115,15 @@ def assess_risk_node(
         }
 
     try:
-        risk_payload = {
-            "extracted_fields": extracted_fields,
-            "classification_result": classification_result,
-        }
+        risk_payload = build_risk_payload(
+            extracted_fields=extracted_fields,
+            classification_result=classification_result,
+        )
 
         complaint_json = json.dumps(
             risk_payload,
-            indent=2,
             ensure_ascii=False,
+            separators=(",", ":"),
             default=str,
         )
 
@@ -133,7 +135,7 @@ def assess_risk_node(
             system_prompt=RISK_SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.1,
-            max_tokens=1500,
+            max_tokens=650,
         )
 
         parsed_json = _parse_json_response(
