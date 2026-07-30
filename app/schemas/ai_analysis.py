@@ -31,7 +31,7 @@ class AIRunCreate(BaseModel):
 
     model_provider: str = "GROQ"
 
-    model_name: str = "gemma2-9b-it"
+    model_name: str = "llama-3.3-70b-versatile"
 
     langgraph_thread_id: str | None = None
 

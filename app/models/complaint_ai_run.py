@@ -82,7 +82,7 @@ class ComplaintAIRun(Base):
     model_name = Column(
         String(100),
         nullable=False,
-        server_default=text("'gemma2-9b-it'"),
+        server_default=text("'llama-3.3-70b-versatile'"),
     )
 
     langgraph_thread_id = Column(

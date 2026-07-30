@@ -26,8 +26,9 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 10
 
     # Groq configuration
-    groq_api_key: str | None = None
-    groq_model: str = "gemma2-9b-it"
+    GROQ_API_KEY: str | None = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_FALLBACK_MODEL: str = "llama-3.1-8b-instant"
 
     model_config = SettingsConfigDict(
         env_file=".env",
