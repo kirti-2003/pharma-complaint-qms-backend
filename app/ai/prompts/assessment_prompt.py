@@ -38,13 +38,17 @@ ASSESSMENT_SYSTEM_PROMPT = dedent(
     - numeric risk confidence
 
     Confidence rules:
-    - classification_confidence must be a number from 0.0 to 1.0
-    - risk_confidence must be a number from 0.0 to 1.0
-    - Do not return LOW, MEDIUM, HIGH, or other text labels
-      for confidence fields
-    - Example low confidence: 0.3
-    - Example medium confidence: 0.6
-    - Example high confidence: 0.9
+    - classification_confidence must be a valid JSON number
+      between 0.0 and 1.0.
+    - risk_confidence must be a valid JSON number
+      between 0.0 and 1.0.
+    - Use digits only for confidence values.
+    - Valid examples: 0.25, 0.5, 0.85, 0.9, 1.0
+    - Invalid examples: "0.9", "high", "nine",
+      "0. nine", "90%"
+    - Never spell numbers using words.
+    - Never include units, labels, or percentages
+      in confidence fields.
 
     Important consistency rules:
     - A reported adverse event should normally require immediate review.
@@ -53,6 +57,11 @@ ASSESSMENT_SYSTEM_PROMPT = dedent(
     - A meaningful product defect without serious reported harm should
       normally be MAJOR or HIGH depending on the evidence.
     - Do not treat the output as a final regulatory decision.
+
+    Output rules:
+    - Return every field required by the schema.
+    - Use null for unavailable nullable scalar fields.
+    - Use [] for unavailable list fields.
     - Return valid JSON only.
     - Do not return Markdown or code fences.
     - Do not return any explanation outside the JSON object.
@@ -77,7 +86,7 @@ ASSESSMENT_USER_PROMPT_TEMPLATE = dedent(
         "is_quality_complaint": false,
         "is_adverse_event": false,
         "requires_immediate_attention": false,
-        "classification_confidence": 0.85,
+        "classification_confidence": 0.9,
         "classification_reasoning": null
       }},
       "risk_assessment": {{
