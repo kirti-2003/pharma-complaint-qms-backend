@@ -256,11 +256,6 @@ class AttachmentService:
             self.upload_directory / str(complaint_id)
         )
 
-        complaint_directory.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
         storage_path = (
             complaint_directory / stored_file_name
         )
@@ -268,6 +263,14 @@ class AttachmentService:
         file_size_bytes = 0
 
         try:
+            complaint_directory.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            print("UPLOAD DIRECTORY:", self.upload_directory)
+            print("STORAGE PATH:", storage_path)
+
             with storage_path.open("wb") as destination:
                 while True:
                     chunk = await file.read(1024 * 1024)
@@ -370,6 +373,8 @@ class AttachmentService:
         except OSError as exc:
             db.rollback()
             self._remove_file_if_exists(storage_path)
+
+            print("ATTACHMENT OS ERROR:", repr(exc))
 
             raise HTTPException(
                 status_code=(
