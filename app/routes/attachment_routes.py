@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.attachment import AttachmentResponse
 from app.services.attachment_service import AttachmentService
+from app.core.config import settings
 
 
 router = APIRouter(
@@ -13,9 +14,10 @@ router = APIRouter(
     tags=["Complaint Attachments"],
 )
 
-attachment_service = AttachmentService()
-
-
+attachment_service = AttachmentService(
+    upload_directory=settings.upload_directory,
+    max_upload_size_mb=settings.max_upload_size_mb,
+)
 @router.post(
     "/{complaint_id}/attachments",
     response_model=AttachmentResponse,
