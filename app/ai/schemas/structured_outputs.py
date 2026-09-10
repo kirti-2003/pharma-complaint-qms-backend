@@ -683,10 +683,24 @@ class ComplaintFinalOutput(BaseModel):
 
 
 class ComplaintAssessmentOutput(BaseModel):
-        model_config = ConfigDict(
-            extra="ignore",
-            str_strip_whitespace=True,
-        )
+    """
+    Combined structured output containing complaint
+    classification and preliminary risk assessment.
+    """
 
-        classification: ComplaintClassificationOutput
-        risk_assessment: RiskAssessmentOutput
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
+
+    classification: ComplaintClassificationOutput = Field(
+        description=(
+            "Structured pharmaceutical complaint classification."
+        ),
+    )
+
+    risk_assessment: RiskAssessmentOutput = Field(
+        description=(
+            "Structured preliminary complaint risk assessment."
+        ),
+    )
