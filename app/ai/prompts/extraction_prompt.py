@@ -110,8 +110,16 @@ EXTRACTION_USER_PROMPT_TEMPLATE = dedent(
       "storage_conditions": null,
       "supporting_evidence": [],
       "source_reference": null,
-      "additional_information": {{}}
+      "additional_information": []
     }}
+
+    Important:
+    - Return every key shown above.
+    - Use null for missing scalar values.
+    - Use [] for missing list values.
+    - supporting_evidence must be a JSON array of strings.
+    - additional_information must be a JSON array of strings.
+    - Never return an object for additional_information.
     """
 ).strip()
 

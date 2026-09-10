@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 from pydantic import ValidationError
@@ -14,37 +13,6 @@ from app.ai.schemas.structured_outputs import (
 )
 
 
-def _parse_json_response(content: str) -> dict[str, Any]:
-    """
-    Convert the Groq text response into a Python dictionary.
-
-    Markdown JSON fences are removed because an LLM may occasionally
-    include them even when the prompt requests plain JSON.
-    """
-
-    cleaned_content = content.strip()
-
-    if cleaned_content.startswith("```json"):
-        cleaned_content = cleaned_content[7:]
-
-    elif cleaned_content.startswith("```"):
-        cleaned_content = cleaned_content[3:]
-
-    if cleaned_content.endswith("```"):
-        cleaned_content = cleaned_content[:-3]
-
-    cleaned_content = cleaned_content.strip()
-
-    parsed_data = json.loads(cleaned_content)
-
-    if not isinstance(parsed_data, dict):
-        raise ValueError(
-            "Groq extraction response must be a JSON object."
-        )
-
-    return parsed_data
-
-
 def extract_complaint_node(
     state: ComplaintGraphState,
 ) -> dict[str, Any]:
@@ -54,11 +22,9 @@ def extract_complaint_node(
     This node:
     - reads raw_text from the graph state
     - builds the extraction prompt
-    - calls Groq
-    - validates the returned JSON using Pydantic
+    - calls Groq using structured output
+    - validates the response with Pydantic
     - updates extracted fields and token usage
-
-    Database operations are intentionally excluded from this node.
     """
 
     node_name = "extract_complaint"
@@ -84,24 +50,19 @@ def extract_complaint_node(
             raw_text=raw_text,
         )
 
-        result = groq_client.generate_completion(
+        result = groq_client.generate_structured_output(
             system_prompt=EXTRACTION_SYSTEM_PROMPT,
             user_prompt=user_prompt,
+            response_model=ExtractedComplaintOutput,
             temperature=0.1,
-            max_tokens=900,
+            max_tokens=4000,
         )
 
-        parsed_json = _parse_json_response(
-            result["content"]
-        )
+        validated_output = result["parsed"]
 
-        validated_output = (
-            ExtractedComplaintOutput.model_validate(
-                parsed_json
-            )
+        extracted_fields = (
+            validated_output.model_dump()
         )
-
-        extracted_fields = validated_output.model_dump()
 
         previous_completed_nodes = state.get(
             "completed_nodes",
@@ -142,7 +103,6 @@ def extract_complaint_node(
         }
 
     except (
-        json.JSONDecodeError,
         ValidationError,
         ValueError,
         RuntimeError,
@@ -153,7 +113,9 @@ def extract_complaint_node(
             "error_node": node_name,
             "error_message": str(exc),
             "error_details": {
-                "exception_type": type(exc).__name__,
+                "exception_type": (
+                    type(exc).__name__
+                ),
             },
             "processing_status": "FAILED",
         }

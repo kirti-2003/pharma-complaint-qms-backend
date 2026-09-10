@@ -75,169 +75,205 @@ def normalize_confidence(
 
 class ExtractedComplaintOutput(BaseModel):
     """
-    Structured information extracted from complaint text,
-    uploaded documents, emails, or images.
+    Structured information extracted from complaint text.
 
-    Fields should remain None when the information is not
-    explicitly available in the complaint.
+    Every property is required in the JSON response.
+    Fields may contain None when the information is
+    not explicitly available in the complaint.
     """
 
     model_config = ConfigDict(
-        extra="ignore",
+        extra="forbid",
         str_strip_whitespace=True,
     )
 
     complainant_name: str | None = Field(
-        default=None,
-        description="Name of the person or organization submitting the complaint.",
+        description=(
+            "Name of the person or organization "
+            "submitting the complaint."
+        ),
     )
 
     complainant_email: str | None = Field(
-        default=None,
         description="Email address of the complainant.",
     )
 
     complainant_phone: str | None = Field(
-        default=None,
         description="Phone number of the complainant.",
     )
 
     customer_type: str | None = Field(
-        default=None,
         description=(
-            "Type of complainant, such as customer, distributor, hospital, "
-            "pharmacy, regulatory authority, or internal employee."
+            "Type of complainant, such as customer, "
+            "distributor, hospital, pharmacy, "
+            "regulatory authority, or internal employee."
         ),
     )
 
     product_name: str | None = Field(
-        default=None,
         description="Name of the pharmaceutical product.",
     )
 
     product_strength_grade: str | None = Field(
-        default=None,
-        description="Product strength, grade, dosage, or concentration.",
+        description=(
+            "Product strength, grade, dosage, "
+            "or concentration."
+        ),
     )
 
     dosage_form: str | None = Field(
-        default=None,
-        description="Dosage form such as tablet, capsule, injection, syrup, or API.",
+        description=(
+            "Dosage form such as tablet, capsule, "
+            "injection, syrup, or API."
+        ),
     )
 
     batch_lot_number: str | None = Field(
-        default=None,
-        description="Batch number or lot number associated with the product.",
+        description=(
+            "Batch number or lot number associated "
+            "with the product."
+        ),
     )
 
     manufacturing_date: str | None = Field(
-        default=None,
-        description="Manufacturing date exactly as mentioned in the complaint.",
+        description=(
+            "Manufacturing date exactly as mentioned "
+            "in the complaint."
+        ),
     )
 
     expiry_date: str | None = Field(
-        default=None,
-        description="Expiry date exactly as mentioned in the complaint.",
+        description=(
+            "Expiry date exactly as mentioned "
+            "in the complaint."
+        ),
     )
 
     complaint_date: str | None = Field(
-        default=None,
-        description="Date on which the complaint was received or reported.",
+        description=(
+            "Date on which the complaint was "
+            "received or reported."
+        ),
     )
 
     incident_date: str | None = Field(
-        default=None,
-        description="Date on which the reported incident occurred.",
+        description=(
+            "Date on which the reported incident occurred."
+        ),
     )
 
     country: str | None = Field(
-        default=None,
-        description="Country associated with the complaint or incident.",
+        description=(
+            "Country associated with the complaint "
+            "or incident."
+        ),
     )
 
     complaint_description: str | None = Field(
-        default=None,
-        description="Clear summary of the complaint described by the complainant.",
+        description=(
+            "Clear summary of the complaint described "
+            "by the complainant."
+        ),
     )
 
     observed_issue: str | None = Field(
-        default=None,
-        description="The specific defect, failure, reaction, or issue observed.",
+        description=(
+            "The specific defect, failure, reaction, "
+            "or issue observed."
+        ),
     )
 
     quantity_affected: str | None = Field(
-        default=None,
-        description="Quantity of product reportedly affected.",
+        description=(
+            "Quantity of product reportedly affected."
+        ),
     )
 
     patient_involved: bool | None = Field(
-        default=None,
-        description="Whether a patient was involved in the reported complaint.",
+        description=(
+            "Whether a patient was involved "
+            "in the reported complaint."
+        ),
     )
 
     adverse_event_reported: bool | None = Field(
-        default=None,
-        description="Whether an adverse event or health impact was reported.",
+        description=(
+            "Whether an adverse event or health impact "
+            "was reported."
+        ),
     )
 
     patient_outcome: str | None = Field(
-        default=None,
-        description="Reported patient outcome, when available.",
+        description=(
+            "Reported patient outcome, when available."
+        ),
     )
 
     storage_conditions: str | None = Field(
-        default=None,
-        description="Storage or transportation conditions mentioned in the complaint.",
+        description=(
+            "Storage or transportation conditions "
+            "mentioned in the complaint."
+        ),
     )
 
     supporting_evidence: list[str] = Field(
-        default_factory=list,
         description=(
-            "Evidence mentioned in the complaint, such as photographs, samples, "
-            "invoices, labels, or medical reports."
+            "Evidence mentioned in the complaint. "
+            "Return an empty list when no evidence "
+            "is mentioned."
         ),
     )
 
     source_reference: str | None = Field(
-        default=None,
-        description="Reference number, email subject, document ID, or external identifier.",
+        description=(
+            "Reference number, email subject, "
+            "document ID, or external identifier."
+        ),
     )
 
-    additional_information: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Other relevant information that does not fit the defined fields.",
+    additional_information: list[str] = Field(
+        description=(
+            "Other relevant facts explicitly stated "
+            "in the complaint that do not fit the "
+            "defined fields. Return an empty list "
+            "when there are none."
+        ),
     )
 
 
 class ComplaintClassificationOutput(BaseModel):
     """
-    Structured classification produced after complaint extraction
-    and required-field validation.
+    Structured classification produced after complaint
+    extraction and required-field validation.
+
+    All properties are required by the strict Groq JSON
+    schema. Nullable properties may contain None.
     """
 
     model_config = ConfigDict(
-        extra="ignore",
+        extra="forbid",
         str_strip_whitespace=True,
     )
 
     complaint_category: str | None = Field(
-        default=None,
         description=(
-            "High-level complaint category such as product quality, packaging, "
-            "labeling, delivery, documentation, or adverse event."
+            "High-level complaint category such as "
+            "product quality, packaging, labeling, "
+            "delivery, documentation, or adverse event."
         ),
     )
 
     complaint_subcategory: str | None = Field(
-        default=None,
-        description="More specific complaint classification.",
+        description=(
+            "More specific complaint classification."
+        ),
     )
 
     complaint_type: str | None = Field(
-        default=None,
         description=(
-            "Complaint type such as API, finished dosage form, packaging, "
-            "medical device, service, or logistics."
+            "Complaint type such as API, finished "
+            "dosage form, packaging, medical device, "
+            "service, or logistics."
         ),
     )
 
@@ -246,39 +282,48 @@ class ComplaintClassificationOutput(BaseModel):
         "MAJOR",
         "CRITICAL",
     ] | None = Field(
-        default=None,
         description=(
-            "Suggested pharmaceutical complaint severity: "
-            "MINOR, MAJOR, or CRITICAL."
+            "Suggested pharmaceutical complaint "
+            "severity: MINOR, MAJOR, or CRITICAL."
         ),
     )
 
     is_quality_complaint: bool = Field(
-        default=False,
-        description="Whether the complaint relates to product quality.",
+        description=(
+            "Whether the complaint relates "
+            "to product quality."
+        ),
     )
 
     is_adverse_event: bool = Field(
-        default=False,
-        description="Whether the complaint contains a possible adverse event.",
+        description=(
+            "Whether the complaint contains "
+            "a possible adverse event."
+        ),
     )
 
     requires_immediate_attention: bool = Field(
-        default=False,
-        description="Whether immediate human review is recommended.",
+        description=(
+            "Whether immediate human review "
+            "is recommended."
+        ),
     )
 
     classification_confidence: float | None = Field(
-        default=None,
         ge=0.0,
         le=1.0,
-        description="Confidence score between 0 and 1.",
+        description=(
+            "Confidence score between 0 and 1."
+        ),
     )
 
     classification_reasoning: str | None = Field(
-        default=None,
-        description="Brief explanation supporting the classification.",
+        description=(
+            "Brief explanation supporting "
+            "the classification."
+        ),
     )
+
     @field_validator(
         "classification_confidence",
         mode="before",
@@ -291,18 +336,21 @@ class ComplaintClassificationOutput(BaseModel):
         return normalize_confidence(
             value
         )
-
-
+    
 class RiskAssessmentOutput(BaseModel):
     """
     Initial AI-generated risk assessment.
 
-    This is a preliminary recommendation and should not be treated
-    as the final regulatory or quality decision.
+    This is a preliminary recommendation and should
+    not be treated as the final regulatory or quality
+    decision.
+
+    All properties are required by the strict Groq
+    structured-output schema.
     """
 
     model_config = ConfigDict(
-        extra="ignore",
+        extra="forbid",
         str_strip_whitespace=True,
     )
 
@@ -312,75 +360,100 @@ class RiskAssessmentOutput(BaseModel):
         "HIGH",
         "CRITICAL",
     ] | None = Field(
-        default=None,
-        description="Initial risk level.",
+        description=(
+            "Initial complaint risk level."
+        ),
     )
 
     patient_safety_risk: str | None = Field(
-        default=None,
-        description="Assessment of possible patient safety impact.",
+        description=(
+            "Assessment of possible patient "
+            "safety impact."
+        ),
     )
 
     product_quality_risk: str | None = Field(
-        default=None,
-        description="Assessment of possible product quality impact.",
+        description=(
+            "Assessment of possible product "
+            "quality impact."
+        ),
     )
 
     regulatory_risk: str | None = Field(
-        default=None,
-        description="Assessment of possible regulatory impact.",
+        description=(
+            "Assessment of possible "
+            "regulatory impact."
+        ),
     )
 
     business_risk: str | None = Field(
-        default=None,
-        description="Assessment of reputational, operational, or commercial impact.",
+        description=(
+            "Assessment of reputational, operational, "
+            "or commercial impact."
+        ),
     )
 
     requires_escalation: bool = Field(
-        default=False,
-        description="Whether the complaint should be escalated immediately.",
+        description=(
+            "Whether the complaint should "
+            "be escalated immediately."
+        ),
     )
 
     requires_sample_collection: bool = Field(
-        default=False,
-        description="Whether collecting the affected product sample is recommended.",
+        description=(
+            "Whether collecting the affected "
+            "product sample is recommended."
+        ),
     )
 
     requires_batch_investigation: bool = Field(
-        default=False,
-        description="Whether a batch-level investigation is recommended.",
+        description=(
+            "Whether a batch-level investigation "
+            "is recommended."
+        ),
     )
 
     requires_adverse_event_review: bool = Field(
-        default=False,
-        description="Whether pharmacovigilance or adverse-event review is recommended.",
+        description=(
+            "Whether pharmacovigilance or "
+            "adverse-event review is recommended."
+        ),
     )
 
     suggested_next_action: str | None = Field(
-        default=None,
-        description="Recommended immediate next action.",
+        description=(
+            "Recommended immediate next action."
+        ),
     )
 
     recommended_actions: list[str] = Field(
-        default_factory=list,
-        description="List of recommended investigation or follow-up actions.",
+        description=(
+            "List of recommended investigation "
+            "or follow-up actions."
+        ),
     )
 
     risk_factors: list[str] = Field(
-        default_factory=list,
-        description="Factors that contributed to the risk assessment.",
+        description=(
+            "Factors that contributed to "
+            "the risk assessment."
+        ),
     )
 
     risk_confidence: float | None = Field(
-        default=None,
         ge=0.0,
         le=1.0,
-        description="Confidence score between 0 and 1.",
+        description=(
+            "Confidence score between 0 and 1."
+        ),
     )
 
     risk_reasoning: str | None = Field(
-        default=None,
-        description="Brief explanation supporting the risk assessment.",
+        description=(
+            "Brief explanation supporting "
+            "the risk assessment."
+        ),
     )
 
     @field_validator(
@@ -407,13 +480,19 @@ class RiskAssessmentOutput(BaseModel):
                 return cleaned
 
             try:
-                numeric_value = float(cleaned)
-                value = numeric_value
+                value = float(
+                    cleaned
+                )
             except ValueError:
                 return None
 
-        if isinstance(value, (int, float)):
-            numeric_value = float(value)
+        if isinstance(
+            value,
+            (int, float),
+        ):
+            numeric_value = float(
+                value
+            )
 
             if numeric_value <= 0.25:
                 return "LOW"
@@ -437,8 +516,9 @@ class RiskAssessmentOutput(BaseModel):
         cls,
         value: Any,
     ) -> float | None:
-        return normalize_confidence(value)
-
+        return normalize_confidence(
+            value
+        )
 
 class ChatCorrectionOutput(BaseModel):
     """
